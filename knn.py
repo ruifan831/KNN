@@ -28,7 +28,7 @@ class KNN:
         :param labels: List[int]
         """
         self.features = features
-        self.labels= labels
+        self.labels= np.array(labels).astype(int).tolist()
 
     # TODO: find KNN of one point
     def get_k_neighbors(self, point):
@@ -40,7 +40,7 @@ class KNN:
         :return:  List[int]
         """
         distances = list(map(lambda x:self.distance_function(x,point),self.features))
-        k_index = np.argsort(distances)[:self.k]
+        k_index = np.argpartition(distances,self.k)[:self.k]
         # print(type(np.take(self.labels,k_index).tolist()[0]))
         return np.take(self.labels,k_index).tolist()
 		

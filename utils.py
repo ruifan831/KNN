@@ -108,7 +108,7 @@ class HyperparameterTuner:
         best_score=-float("inf")
         dis_list=['euclidean','minkowski','cosine_dist']
         for k in dis_list:
-            for i in range(1,30):
+            for i in range(1,min(len(x_train),30)):
                 model = KNN(i,distance_funcs[k])
                 model.train(x_train,y_train)
                 temp_f1 = f1_score(y_val,model.predict(x_val))
@@ -240,7 +240,7 @@ class HyperparameterTuner:
             scaled_x_train = scalModel(x_train)
             scaled_x_val =scalModel(x_val)
             for k in dis_list:
-                for i in range(1,30):
+                for i in range(1,min(30,len(scaled_x_train))):
                     model = KNN(i,distance_funcs[k])
                     model.train(scaled_x_train,y_train)
                     temp_f1 = f1_score(y_val,model.predict(scaled_x_val))
