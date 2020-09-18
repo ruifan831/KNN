@@ -26,13 +26,13 @@ def main():
     print("k =", tuner_without_scaling_obj.best_k)
     print("distance function =", tuner_without_scaling_obj.best_distance_function)
 
-    # tuner_with_scaling_obj = HyperparameterTuner()
-    # tuner_with_scaling_obj.tuning_with_scaling(distance_funcs, scaling_classes, x_train, y_train, x_val, y_val)
+    tuner_with_scaling_obj = HyperparameterTuner()
+    tuner_with_scaling_obj.tuning_with_scaling(distance_funcs, scaling_classes, x_train, y_train, x_val, y_val)
 
-    # print("\n**With Scaling**")
-    # print("k =", tuner_with_scaling_obj.best_k)
-    # print("distance function =", tuner_with_scaling_obj.best_distance_function)
-    # print("scaler =", tuner_with_scaling_obj.best_scaler)
+    print("\n**With Scaling**")
+    print("k =", tuner_with_scaling_obj.best_k)
+    print("distance function =", tuner_with_scaling_obj.best_distance_function)
+    print("scaler =", tuner_with_scaling_obj.best_scaler)
 
 
 if __name__ == '__main__':

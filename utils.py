@@ -14,11 +14,21 @@ def f1_score(real_labels, predicted_labels):
     :param predicted_labels: List[int]
     :return: float
     """
+    
     assert len(real_labels) == len(predicted_labels)
+    temp = list(zip(real_labels,predicted_labels))
+    tp = float(sum([i==1 and j==1 for i,j in temp]))
+    fp = float(sum([i==0 and j==1 for i,j in temp]))
+    fn = float(sum([i==1 and j==0 for i,j in temp]))
+    if 2 * tp + fp + fn == 0:
+        f1 = 0
+    else:
+        f1 = 2 * tp / float(2 * tp + fp + fn)
 
-    recall = np.dot(real_labels,predicted_labels)/ np.count_nonzero(np.array(real_labels)==1)
-    precision= np.dot(real_labels,predicted_labels)/ np.count_nonzero(np.array(predicted_labels)==1)
-    return 2* precision*recall/(precision+recall)
+    # recall = np.dot(real_labels,predicted_labels)/ np.count_nonzero(real_labels)
+    # precision= np.dot(real_labels,predicted_labels)/ np.count_nonzero(predicted_labels)
+    # f1= 2* precision*recall/(precision+recall)
+    return f1
 
 
 class Distances:
@@ -34,17 +44,18 @@ class Distances:
         :param point2: List[float]
         :return: float
         """
-        return np.power(np.sum(np.power(np.subtract(point1,point2),3)),1/3)
+        return np.linalg.norm(np.subtract(point1,point2),3).tolist()
 
     @staticmethod
     # TODO
+        
     def euclidean_distance(point1, point2):
         """
         :param point1: List[float]
         :param point2: List[float]
         :return: float
         """
-        return np.sqrt(np.sum(np.power(np.subtract(point1,point2),2)))
+        return np.linalg.norm(np.subtract(point1,point2)).tolist()
 
 
     @staticmethod
@@ -55,10 +66,10 @@ class Distances:
        :param point2: List[float]
        :return: float
        """
-        norm1 = np.linalg.norm(point1)
-        norm2 = np.linalg.norm(point2)
-        numerator = np.dot(point1,point2)
-        return 1 - numerator/(norm1*norm2)
+        if np.linalg.norm(point1)*np.linalg.norm(point2) == 0:
+            return 0.0
+        else:
+            return 1.0 - (np.dot(point1, point2) / (np.linalg.norm(point1)*np.linalg.norm(point2)))
 
 
 
@@ -91,27 +102,106 @@ class HyperparameterTuner:
         """
         
         # You need to assign the final values to these variables
-        self.best_k = None
+        self.best_k = 0
         self.best_distance_function = None
         self.best_model = None
-        best_list=[]
-        for k,v in distance_funcs.items():
-            print(k)
-            f1_scores =[self.helper(i,v,x_train,y_train,x_val,y_val) for i in range(1,30)]
+        best_score=-float("inf")
+        dis_list=['euclidean','minkowski','cosine_dist']
+        for k in dis_list:
+            for i in range(1,30):
+                model = KNN(i,distance_funcs[k])
+                model.train(x_train,y_train)
+                temp_f1 = f1_score(y_val,model.predict(x_val))
+                if temp_f1> best_score:
+                    best_score=temp_f1
+                    self.best_k=i
+                    self.best_distance_function=k
+                    self.best_model=model
+                    # else:
+                    #     if k == self.best_distance_function:
+                    #         continue
+                    #     elif len(k) == len(self.best_distance_function):
+                    #         if k=="euclidean":
+                    #             self.best_k=i
+                    #             self.best_distance_function=k
+                    #             self.best_model=model
+                    #     elif len(k)<len(self.best_distance_function):
+                    #         self.best_k=i
+                    #         self.best_distance_function=k
+                    #         self.best_model=model
+
+
+
+
+        #     f1_scores =[self.helper(i,v,x_train,y_train,x_val,y_val) for i in range(1,30)]
             
-            temp_k = np.argmax(f1_scores)
-            temp_score = f1_scores[temp_k]
-            best_list.append((temp_score,temp_k,k))
-        temp = sorted(best_list,reverse=True)[0]
-        self.best_k = temp[1]
-        self.best_distance_function=temp[2]
-        self.best_model = KNN(self.best_k,distance_funcs[self.best_distance_function])
+        #     temp_k = np.argmax(f1_scores)
+        #     temp_score = f1_scores[temp_k]
+
+        #     best_list.append((temp_score,temp_k+1,k))
+        # def custom_sort(data):
+        #     if len(data)>1:
+        #         midpoint = len(data)//2
+        #         L=data[:midpoint]
+        #         R=data[midpoint:]
+        #         custom_sort(L)
+        #         custom_sort(R)
+        #         i = j =k =0
+
+        #         while i<len(L) and j<len(R):
+        #             l = L[i]
+        #             r = R[j]
+
+        #             if l[0] > r[0]:
+        #                 data[k]=l
+        #                 i+=1
+        #             elif r[0] > l[0]:
+        #                 data[k]=r
+        #                 j+=1
+        #             else:                        
+        #                 if l[2]==r[2]:
+        #                     if l[1]<=r[1]:
+        #                         data[k]=l
+        #                         i+=1
+        #                     else:
+        #                         data[k]=r
+        #                         j+=1
+        #                 else:
+        #                     if len(l[2]) == len(r[2]):
+        #                         if l[2]<r[2]:
+        #                             data[k] =l
+        #                             i+=1
+        #                         else:
+        #                             data[k]=r
+        #                             j+=1
+                                
+        #                     elif len(l[2])>len(r[2]):
+        #                         data[k]=r
+        #                         j+=1
+        #                     else:
+        #                         data[k]=l
+        #                         i+=1
+        #             k+=1
+        #         while i < len(L): 
+        #             data[k] = L[i] 
+        #             i+= 1
+        #             k+= 1
+                
+        #         while j < len(R): 
+        #             data[k] = R[j] 
+        #             j+= 1
+        #             k+= 1
+        # custom_sort(best_list)
+        # temp= best_list[0]
+        # self.best_k = temp[1]
+        # self.best_distance_function=temp[2]
+        # self.best_model = KNN(self.best_k,distance_funcs[self.best_distance_function])
+        # self.best_model.train(x_train,y_train)
         self.best_scaler = None
     
     def helper(self,k,dis_function,x_train,y_train,x_val,y_val):
         knn = KNN(k,dis_function)
         knn.train(x_train,y_train)
-        print(f1_score(y_val,knn.predict(x_val)))
         return f1_score(y_val,knn.predict(x_val))
         
 
@@ -142,7 +232,120 @@ class HyperparameterTuner:
         self.best_distance_function = None
         self.best_scaler = None
         self.best_model = None
-        raise NotImplementedError
+        dis_list=['euclidean','minkowski','cosine_dist']
+        scal_list=['min_max_scale','normalize']
+        best_score=-float("inf")
+        for scal in scal_list:
+            scalModel = scaling_classes[scal]()
+            scaled_x_train = scalModel(x_train)
+            scaled_x_val =scalModel(x_val)
+            for k in dis_list:
+                for i in range(1,30):
+                    model = KNN(i,distance_funcs[k])
+                    model.train(scaled_x_train,y_train)
+                    temp_f1 = f1_score(y_val,model.predict(scaled_x_val))
+                    if temp_f1>best_score:
+                        # if temp_f1>best_score:
+                            best_score=temp_f1
+                            self.best_k=i
+                            self.best_distance_function=k
+                            self.best_model=model
+                            self.best_scaler=scal
+                        # else:
+                        #     if self.best_scaler is not None:
+                        #         if len(scal) > len(self.best_scaler):
+                        #             self.best_k=i
+                        #             self.best_distance_function=k
+                        #             self.best_model=model
+                        #             self.best_scaler=scal
+                        #         if scal == self.best_scaler:
+                        #             if k == self.best_distance_function:
+                        #                 continue
+                        #             elif len(k) == len(self.best_distance_function):
+                        #                 if k<self.best_distance_function:
+                        #                     self.best_k=i
+                        #                     self.best_distance_function=k
+                        #                     self.best_model=model
+                        #                     self.best_scaler=scal
+                        #             elif len(k)<len(self.best_distance_function):
+                        #                 self.best_k=i
+                        #                 self.best_distance_function=k
+                        #                 self.best_model=model
+                        #                 self.best_scaler=scal
+
+
+
+
+        #         f1_scores =[self.helper(i,v,scaled_x_train,y_train,scaled_x_val,y_val) for i in range(1,30)]
+        #         temp_k = np.argmax(f1_scores)
+        #         temp_score = f1_scores[temp_k]
+        #         best_list.append((temp_score,temp_k+1,k,scal))
+        # def custom_sort(data):
+        #     if len(data)>1:
+        #         midpoint = len(data)//2
+        #         L=data[:midpoint]
+        #         R=data[midpoint:]
+        #         custom_sort(L)
+        #         custom_sort(R)
+        #         i = j =k =0
+                
+        #         while i<len(L) and j<len(R):
+        #             l = L[i]
+        #             r = R[j]
+                    
+        #             if l[0] > r[0]:
+        #                 data[k]=l
+        #                 i+=1
+        #             elif r[0] > l[0]:
+        #                 data[k]=r
+        #                 j+=1
+        #             else:
+        #                 if len(l[3])>len(r[3]):
+        #                     data[k]=l
+        #                     i+=1
+        #                 elif len(l[3])<len(r[3]):
+        #                     data[k]=r
+        #                     j+=1
+        #                 else:
+        #                     if l[2]==r[2]:
+        #                         if l[1]<=r[1]:
+        #                             data[k]=l
+        #                             i+=1
+        #                         else:
+        #                             data[k]=r
+        #                             j+=1
+        #                     else:
+        #                         if len(l[2]) == len(r[2]):
+        #                             if l[2]<r[2]:
+        #                                 data[k] =l
+        #                                 i+=1
+        #                             else:
+        #                                 data[k]=r
+        #                                 j+=1                                    
+        #                         elif len(l[2])>len(r[2]):
+        #                             data[k]=r
+        #                             j+=1
+        #                         else:
+        #                             data[k]=l
+        #                             i+=1
+        #             k+=1
+        #         while i < len(L): 
+        #             data[k] = L[i] 
+        #             i+= 1
+        #             k+= 1
+                
+        #         while j < len(R): 
+        #             data[k] = R[j] 
+        #             j+= 1
+        #             k+= 1
+        # custom_sort(best_list)
+        # temp = best_list[0]
+        # self.best_k = temp[1]
+        # self.best_distance_function=temp[2]
+        # self.best_model = KNN(self.best_k,distance_funcs[self.best_distance_function])
+        # self.best_scaler = temp[3]
+        # temp_scal_model = scaling_classes[self.best_scaler]()
+        # self.best_model.train(temp_scal_model(x_train),y_train)
 
 
 class NormalizationScaler:
@@ -161,8 +364,15 @@ class NormalizationScaler:
         :param features: List[List[float]]
         :return: List[List[float]]
         """
-        norms = np.linalg.norm(features,axis=1).reshape(-1,1)
-        return features/norms
+        norms = np.linalg.norm(features,axis=1)
+        features=np.array(features).astype("float64")
+        
+        for i in range(norms.shape[0]):
+            if norms[i] != 0 :
+                
+                features[i,:] = features[i,:]/norms[i]
+        
+        return features.tolist()
 
 
 class MinMaxScaler:
@@ -185,4 +395,14 @@ class MinMaxScaler:
         :param features: List[List[float]]
         :return: List[List[float]]
         """
-        return np.subtract(features,np.min(features,axis=0))/(np.max(features,axis=0)-np.min(features,axis=0))
+        features_to_zero = np.argwhere(np.equal(np.max(features,axis=0),np.min(features,axis=0))==True)
+        features=np.array(features)
+        features=features.astype(float)
+        for i in range(features.shape[1]):
+            if i in features_to_zero:
+                features[:,i]=0
+            else:
+                temp = np.subtract(features[:,i],np.min(features[:,i]))/(np.max(features[:,i])-np.min(features[:,i]))
+                features[:,i]=temp
+                
+        return features.tolist()

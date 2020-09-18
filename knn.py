@@ -39,9 +39,10 @@ class KNN:
         :param point: List[float]
         :return:  List[int]
         """
-        distances = np.linalg.norm(np.subtract(self.features,point),axis=1)
+        distances = list(map(lambda x:self.distance_function(x,point),self.features))
         k_index = np.argsort(distances)[:self.k]
-        return np.take(self.labels,k_index).astype(int)
+        # print(type(np.take(self.labels,k_index).tolist()[0]))
+        return np.take(self.labels,k_index).tolist()
 		
 	# TODO: predict labels of a list of points
     def predict(self, features):
@@ -54,7 +55,7 @@ class KNN:
         :param features: List[List[float]]
         :return: List[int]
         """
-        return list(map(lambda x:np.bincount(x).argmax(),map(lambda x:self.get_k_neighbors(x),features)))
+        return list(map(lambda x:np.bincount(x).argmax().tolist(),map(lambda x:self.get_k_neighbors(x),features)))
 
 
 if __name__ == '__main__':
