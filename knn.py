@@ -40,16 +40,18 @@ class KNN:
         :return:  List[int]
         """
         distances = list(map(lambda x:self.distance_function(x,point),self.features))
-        k_index = np.argpartition(distances,self.k)[:self.k]
-        k_index_distance = np.take(distances,k_index)
-        temp= sorted(list(zip(k_index_distance,k_index)))
-        k_index = np.sort(k_index) 
+        distancesWithIndex = np.array(sorted(list(zip(distances,range(len(distances)))),key=lambda x:(x[0],x[1])))
+        k_index = distancesWithIndex[:self.k,1].astype(int)
+        # k_index = np.argpartition(distances,self.k)[:self.k]
+        # k_index_distance = np.take(distances,k_index)
+        # temp= sorted(list(zip(k_index_distance,k_index)))
+        # k_index = np.sort(k_index) 
         # print(type(np.take(self.labels,k_index).tolist()[0]))
         result=np.take(self.labels,k_index).tolist()
         if np.unique(np.bincount(result)).size==1 and np.bincount(result).shape[0] >1 and self.k>1:
             # k_index = np.argpartition(distances,self.k-1)[:self.k-1]
             
-            k_index = np.array(temp)[:-1,1]
+            k_index = distancesWithIndex[:self.k-1,1]
             k_index = k_index.astype(int)
             result=np.take(self.labels,k_index).tolist()
 
