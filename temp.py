@@ -12,4 +12,5 @@ print(MinMaxScaler()(features))
 
 
 temp = [1,2,3124141,7,124,213,532]
+print(temp[:-1])
 print(np.argpartition(temp,3)[:10])
